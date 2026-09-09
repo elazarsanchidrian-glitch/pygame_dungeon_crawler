@@ -1,0 +1,74 @@
+{
+  "player": {
+    "name": "Arthur",
+    "health": 100,
+    "attack_strength": 15,
+    "gold": 25,
+    "inventory": [
+      {
+        "name": "Sword",
+        "description": "A sharp steel sword."
+      },
+      {
+        "name": "Health Potion",
+        "description": "Restores 25 health."
+      }
+    ]
+  },
+
+  "current_room": "Hallway",
+
+  "rooms": [
+    {
+      "name": "Entrance",
+      "description": "The entrance to the dungeon.",
+      "is_exit": false,
+      "items": [],
+      "monster": null
+    },
+
+    {
+      "name": "Hallway",
+      "description": "A dark hallway lit by flickering torches.",
+      "is_exit": false,
+      "items": [
+        {
+          "name": "Shield",
+          "description": "Provides extra protection."
+        }
+      ],
+      "monster": {
+        "name": "Goblin",
+        "health": 30,
+        "attack_strength": 8,
+        "gold": 10
+      }
+    },
+
+    {
+      "name": "Treasure Room",
+      "description": "A room filled with glittering treasure.",
+      "is_exit": false,
+      "items": [
+        {
+          "name": "Treasure Chest",
+          "description": "Contains valuable gold."
+        }
+      ],
+      "monster": {
+        "name": "Skeleton",
+        "health": 40,
+        "attack_strength": 12,
+        "gold": 30
+      }
+    },
+
+    {
+      "name": "Exit",
+      "description": "A large stone doorway leading outside.",
+      "is_exit": true,
+      "items": [],
+      "monster": null
+    }
+  ]
+}

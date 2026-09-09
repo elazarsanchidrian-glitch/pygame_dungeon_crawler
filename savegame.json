@@ -1,0 +1,25 @@
+{
+    "player": {
+        "name": "elazar",
+        "gender": "Male",
+        "race": "Elf",
+        "character_class": "Rogue",
+        "passive": "Arcane Affinity",
+        "health": 126,
+        "max_health": 200,
+        "stamina": 260,
+        "magicka": 195,
+        "gold": 0,
+        "inventory": [
+            {
+                "name": "Health Potion",
+                "description": "Restores some health.",
+                "value": 25
+            }
+        ]
+    },
+    "dungeon": {
+        "current_x": -1,
+        "current_y": 4
+    }
+}
