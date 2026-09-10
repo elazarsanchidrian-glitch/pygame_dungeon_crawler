@@ -4,31 +4,56 @@ import random
 class Player:
 
     def __init__(self, name):
-
         self.name = name
         self.gender = None
+
+        # -------------------------
+        # CORE STATS
+        # -------------------------
 
         self.health = 100
         self.max_health = 100
 
-        self.stamina = 100
-        self.magicka = 100
+        self.max_stamina = 110
+        self.stamina = self.max_stamina
+
+        self.max_magicka = 110
+        self.magicka = self.max_magicka
+
+        # -------------------------
+        # CHARACTER
+        # -------------------------
 
         self.race = None
         self.character_class = None
         self.passive = None
 
-        self.inventory = []
+        # -------------------------
+        # INVENTORY / MONEY
+        # -------------------------
 
+        self.inventory = []
         self.gold = 0
+
+        # -------------------------
+        # LEVEL / EXPERIENCE
+        # -------------------------
 
         self.level = 1
         self.xp = 0
         self.xp_to_next_level = 100
 
+        # -------------------------
+        # EQUIPMENT
+        # -------------------------
+
         self.equipped_weapon = None
         self.equipped_armor = None
         self.equipped_shield = None
+
+        # -------------------------
+        # LOCATION
+        # -------------------------
 
         self.current_room = None
 
@@ -37,11 +62,14 @@ class Player:
     # -------------------------
 
     def setup_starting_inventory(self):
-
         from game.item import Item
 
-        # Clear inventory first
+        # Clear inventory and equipment so this method can safely
+        # be called again during character creation.
         self.inventory = []
+        self.equipped_weapon = None
+        self.equipped_armor = None
+        self.equipped_shield = None
 
         # -------------------------
         # WARRIOR
@@ -140,6 +168,8 @@ class Player:
                 Item(
                     "Mana Potion",
                     "Restores some magicka.",
+                    30,
+                    "consumable",
                     30
                 )
             )
@@ -148,6 +178,8 @@ class Player:
                 Item(
                     "Mana Potion",
                     "Restores some magicka.",
+                    30,
+                    "consumable",
                     30
                 )
             )
@@ -238,11 +270,17 @@ class Player:
     # -------------------------
 
     def auto_equip_starting_gear(self):
+        self.equipped_weapon = None
+        self.equipped_armor = None
+        self.equipped_shield = None
+
         for item in self.inventory:
             if item.item_type == "weapon" and self.equipped_weapon is None:
                 self.equipped_weapon = item
+
             elif item.item_type == "armor" and self.equipped_armor is None:
                 self.equipped_armor = item
+
             elif item.item_type == "shield" and self.equipped_shield is None:
                 self.equipped_shield = item
 
@@ -251,7 +289,6 @@ class Player:
     # -------------------------
 
     def move(self, room):
-
         self.current_room = room
 
     # -------------------------
@@ -268,32 +305,45 @@ class Player:
         else:
             damage = 20
 
+        # Passive bonuses.
         if self.passive == "Brutal":
             damage = int(damage * 1.15)
+
         elif self.passive == "Arcane Affinity":
             damage = int(damage * 1.10)
 
+        # Weapon power is added after the class/passive calculation.
         if self.equipped_weapon:
-            damage += self.equipped_weapon.power
+            damage += getattr(self.equipped_weapon, "power", 0)
 
-        return damage
+        return max(1, damage)
 
     # -------------------------
     # EQUIPMENT
     # -------------------------
 
     def equip_item(self, item_name):
-        item = next((i for i in self.inventory if i.name.lower() == item_name.lower()), None)
+        item = next(
+            (
+                i for i in self.inventory
+                if i.name.lower() == item_name.lower()
+            ),
+            None
+        )
+
         if item is None:
             print("That item is not in your inventory.")
             return False
 
         if item.item_type == "weapon":
             self.equipped_weapon = item
+
         elif item.item_type == "armor":
             self.equipped_armor = item
+
         elif item.item_type == "shield":
             self.equipped_shield = item
+
         else:
             print("You cannot equip that item.")
             return False
@@ -303,10 +353,15 @@ class Player:
 
     def get_damage_reduction(self):
         reduction = 0
+
         if self.equipped_armor:
-            reduction += self.equipped_armor.defense
+            reduction += getattr(self.equipped_armor, "defense", 0)
+
         if self.equipped_shield:
-            reduction += self.equipped_shield.defense
+            reduction += getattr(self.equipped_shield, "defense", 0)
+
+        # Prevent equipment from reducing damage below the minimum intended
+        # threshold. A maximum of 50% reduction keeps combat meaningful.
         return min(reduction, 50)
 
     # -------------------------
@@ -314,7 +369,14 @@ class Player:
     # -------------------------
 
     def use_item(self, item_name):
-        item = next((i for i in self.inventory if i.name.lower() == item_name.lower()), None)
+        item = next(
+            (
+                i for i in self.inventory
+                if i.name.lower() == item_name.lower()
+            ),
+            None
+        )
+
         if item is None:
             print("That item is not in your inventory.")
             return False
@@ -323,82 +385,165 @@ class Player:
             print("That item cannot be used.")
             return False
 
-        if "health" in item.name.lower():
-            old = self.health
-            self.health = min(self.max_health, self.health + item.power)
-            restored = self.health - old
-            print(f"You use {item.name} and restore {restored} health.")
-        elif "mana" in item.name.lower():
-            old = self.magicka
-            self.magicka = min(100 + self.max_health // 2, self.magicka + item.power)
-            restored = self.magicka - old
-            print(f"You use {item.name} and restore {restored} magicka.")
+        item_name_lower = item.name.lower()
+
+        if "health" in item_name_lower:
+            if self.health >= self.max_health:
+                print("Your health is already full.")
+                return False
+
+            old_health = self.health
+            self.health = min(
+                self.max_health,
+                self.health + getattr(item, "power", 0)
+            )
+            restored = self.health - old_health
+
+            print(
+                f"You use {item.name} and restore "
+                f"{restored} health."
+            )
+
+        elif "mana" in item_name_lower or "magicka" in item_name_lower:
+            if self.magicka >= self.max_magicka:
+                print("Your magicka is already full.")
+                return False
+
+            old_magicka = self.magicka
+            self.magicka = min(
+                self.max_magicka,
+                self.magicka + getattr(item, "power", 0)
+            )
+            restored = self.magicka - old_magicka
+
+            print(
+                f"You use {item.name} and restore "
+                f"{restored} magicka."
+            )
+
         else:
             print("Nothing happens.")
             return False
 
         self.inventory.remove(item)
+        self._clear_equipped_reference(item)
+
         return True
+
+    def _clear_equipped_reference(self, item):
+        """Clear an equipment reference if the item was removed."""
+        if self.equipped_weapon is item:
+            self.equipped_weapon = None
+
+        if self.equipped_armor is item:
+            self.equipped_armor = None
+
+        if self.equipped_shield is item:
+            self.equipped_shield = None
 
     # -------------------------
     # EXPERIENCE / LEVELS
     # -------------------------
 
     def gain_xp(self, amount):
+        if amount <= 0:
+            return False
+
         self.xp += amount
         print(f"You gain {amount} XP.")
+
+        leveled_up = False
 
         while self.xp >= self.xp_to_next_level:
             self.xp -= self.xp_to_next_level
             self.level += 1
-            self.xp_to_next_level = int(self.xp_to_next_level * 1.35)
+
+            self.xp_to_next_level = int(
+                self.xp_to_next_level * 1.35
+            )
+
+            # Increase maximum resources rather than only current resources.
             self.max_health += 20
+            self.max_stamina += 10
+            self.max_magicka += 10
+
+            # Restore resources completely after leveling.
             self.health = self.max_health
-            self.stamina += 10
-            self.magicka += 10
-            print(f"\n*** LEVEL UP! You are now level {self.level}! ***")
+            self.stamina = self.max_stamina
+            self.magicka = self.max_magicka
+
+            leveled_up = True
+
+            print(
+                f"\n*** LEVEL UP! "
+                f"You are now level {self.level}! ***"
+            )
             print("Your maximum health increases by 20.")
+            print("Your maximum stamina increases by 10.")
+            print("Your maximum magicka increases by 10.")
+
+        return leveled_up
 
     # -------------------------
     # CLASS ABILITIES
     # -------------------------
 
     def use_ability(self, monster):
+        if monster is None:
+            print("There is no target.")
+            return False
+
+        if getattr(monster, "health", 0) <= 0:
+            print("That enemy is already defeated.")
+            return False
+
         if self.character_class == "Warrior":
             cost = 20
+
             if self.stamina < cost:
                 print("Not enough stamina for Power Strike.")
                 return False
+
             self.stamina -= cost
             damage = int(self.get_attack_damage() * 1.8)
             ability_name = "Power Strike"
 
         elif self.character_class == "Mage":
             cost = 30
+
             if self.magicka < cost:
                 print("Not enough magicka for Fireball.")
                 return False
+
             self.magicka -= cost
             damage = int(self.get_attack_damage() * 1.7)
             ability_name = "Fireball"
 
         elif self.character_class == "Rogue":
             cost = 25
+
             if self.stamina < cost:
                 print("Not enough stamina for Backstab.")
                 return False
+
             self.stamina -= cost
             damage = int(self.get_attack_damage() * 2.0)
+
             if random.random() < 0.25:
                 damage *= 2
                 print("Critical Backstab!")
+
             ability_name = "Backstab"
 
         else:
             print("Your character has no special ability.")
             return False
 
-        print(f"{self.name} uses {ability_name} on {monster.name} for {damage} damage!")
+        print(
+            f"{self.name} uses {ability_name} on "
+            f"{monster.name} for {damage} damage!"
+        )
+
         monster.take_damage(damage)
         return True
 
@@ -407,11 +552,11 @@ class Player:
     # -------------------------
 
     def take_damage(self, damage):
+        damage = max(0, int(damage))
 
-        # Dwarf Tough passive
+        # Dwarf Tough passive.
         if self.passive == "Tough":
-
-            reduced_damage = int(damage * 0.90)
+            reduced_damage = max(1, int(damage * 0.90))
 
             print(
                 f"{self.name}'s Tough passive reduces "
@@ -422,31 +567,38 @@ class Player:
             damage = reduced_damage
 
         reduction = self.get_damage_reduction()
+
         if reduction:
-            reduced_damage = max(1, int(damage * (1 - reduction / 100)))
-            print(f"Equipment reduces damage from {damage} to {reduced_damage}.")
+            reduced_damage = max(
+                1,
+                int(damage * (1 - reduction / 100))
+            )
+
+            print(
+                f"Equipment reduces damage from "
+                f"{damage} to {reduced_damage}."
+            )
+
             damage = reduced_damage
 
-        self.health -= damage
+        self.health = max(0, self.health - damage)
 
-        if self.health < 0:
-
-            self.health = 0
+        return damage
 
     # -------------------------
     # INVENTORY
     # -------------------------
 
     def add_item(self, item):
+        if item is None:
+            return False
 
         self.inventory.append(item)
+        return True
 
     def show_inventory(self):
-
         if not self.inventory:
-
             print("\nInventory is empty.")
-
             return
 
         print("\n" + "=" * 40)
@@ -471,23 +623,33 @@ class Player:
         ]
 
         for item in self.inventory:
+            item_type = getattr(item, "item_type", "")
 
-            if item.item_type in ("weapon", "armor", "shield") or any(
-                keyword in item.name.lower()
-                for keyword in equipment_keywords
+            if (
+                item_type in ("weapon", "armor", "shield")
+                or any(
+                    keyword in item.name.lower()
+                    for keyword in equipment_keywords
+                )
             ):
-
                 equipment.append(item)
 
         if equipment:
-
             print("\nEquipment:")
 
             for item in equipment:
+                equipped = ""
 
-                print(
-                    f" - {item.name}"
-                )
+                if item is self.equipped_weapon:
+                    equipped = " [EQUIPPED]"
+
+                elif item is self.equipped_armor:
+                    equipped = " [EQUIPPED]"
+
+                elif item is self.equipped_shield:
+                    equipped = " [EQUIPPED]"
+
+                print(f" - {item.name}{equipped}")
 
         # -------------------------
         # CONSUMABLES
@@ -496,23 +658,18 @@ class Player:
         consumables = []
 
         for item in self.inventory:
-
             if (
                 "potion" in item.name.lower()
                 or "scroll" in item.name.lower()
+                or getattr(item, "item_type", "") == "consumable"
             ):
-
                 consumables.append(item)
 
         if consumables:
-
             print("\nConsumables:")
 
             for item in consumables:
-
-                print(
-                    f" - {item.name}"
-                )
+                print(f" - {item.name}")
 
         # -------------------------
         # MISCELLANEOUS
@@ -521,22 +678,13 @@ class Player:
         miscellaneous = []
 
         for item in self.inventory:
-
-            if (
-                item not in equipment
-                and item not in consumables
-            ):
-
+            if item not in equipment and item not in consumables:
                 miscellaneous.append(item)
 
         if miscellaneous:
-
             print("\nMiscellaneous:")
 
             for item in miscellaneous:
-
-                print(
-                    f" - {item.name}"
-                )
+                print(f" - {item.name}")
 
         print("\n" + "=" * 40)

@@ -11,7 +11,6 @@ class Dungeon:
 
     def __init__(self):
         # Rooms are stored by coordinates.
-        # Example:
         # (0, 0) = starting room
         # (1, 0) = east
         # (-1, 0) = west
@@ -25,30 +24,40 @@ class Dungeon:
         # -------------------------
         # DUNGEON OBJECTIVES
         # -------------------------
-        # Every dungeon has a normal exit. Its location is randomized
-        # when the dungeon starts, but it is never placed in the entrance.
+        # The normal exit is randomized when the dungeon starts.
+        # It is never placed in the entrance.
         self.exit_min_distance = 5
         self.exit_max_distance = 12
         self.exit_x, self.exit_y = self._choose_exit_location()
 
-        # The boss encounter is intentionally extremely rare.
-        # These values are easy to tune later.
-        self.special_room_chance = 0.01      # 1% of newly discovered rooms
-        self.boss_spawn_chance = 0.10        # 10% if the rare room occurs
-        self.boss_key_drop_chance = 0.05     # 5% after defeating the boss
+        # Rare boss encounter.
+        self.special_room_chance = 0.03
+        self.boss_spawn_chance = 0.25
+        self.boss_key_drop_chance = 0.50
 
-        # Create the starting room
-        self.current_room = self.generate_room(0, 0, starting_room=True)
+        # Create the starting room.
+        self.current_room = self.generate_room(
+            0,
+            0,
+            starting_room=True
+        )
 
     # -------------------------
     # EXIT LOCATION
     # -------------------------
 
     def _choose_exit_location(self):
-        """Choose a guaranteed normal exit somewhere away from the entrance."""
+        """Choose a guaranteed normal exit away from the entrance."""
         while True:
-            x = random.randint(-self.exit_max_distance, self.exit_max_distance)
-            y = random.randint(-self.exit_max_distance, self.exit_max_distance)
+            x = random.randint(
+                -self.exit_max_distance,
+                self.exit_max_distance
+            )
+            y = random.randint(
+                -self.exit_max_distance,
+                self.exit_max_distance
+            )
+
             distance = abs(x) + abs(y)
 
             if self.exit_min_distance <= distance <= self.exit_max_distance:
@@ -60,7 +69,7 @@ class Dungeon:
 
     def generate_room(self, x, y, starting_room=False):
 
-        # If this room already exists, return it.
+        # If this room already exists, return the existing room.
         if (x, y) in self.rooms:
             return self.rooms[(x, y)]
 
@@ -126,14 +135,15 @@ class Dungeon:
                 "The entrance to the dungeon. "
                 "Cold air flows in from behind you."
             )
-
         else:
             name, description = random.choice(room_types)
 
         room = Room(name, description)
 
-        # The normal exit is guaranteed to exist at the randomized
-        # coordinates chosen when this dungeon was created.
+        # -------------------------
+        # NORMAL EXIT
+        # -------------------------
+
         if not starting_room and (x, y) == (self.exit_x, self.exit_y):
             room.name = "Dungeon Exit"
             room.description = (
@@ -142,7 +152,7 @@ class Dungeon:
             )
             room.is_exit = True
 
-        # Generate atmosphere
+        # Generate atmosphere after the final room name is known.
         room.generate_atmosphere()
 
         # -------------------------
@@ -154,7 +164,7 @@ class Dungeon:
             self.generate_items(room)
 
         # -------------------------
-        # EXTREMELY RARE BOSS ROOM
+        # RARE BOSS ENCOUNTER
         # -------------------------
 
         if not starting_room and not room.is_exit:
@@ -174,12 +184,7 @@ class Dungeon:
         if not room.is_boss_room and not room.is_exit:
             self.generate_npc(room)
 
-        # Save room
-        self.rooms[(x, y)] = room
-
-        return room
-
-        # Save room
+        # Save the newly generated room.
         self.rooms[(x, y)] = room
 
         return room
@@ -190,6 +195,7 @@ class Dungeon:
 
     def generate_special_boss_room(self, room):
         """Occasionally turn a newly discovered room into a rare boss room."""
+
         if random.random() >= self.special_room_chance:
             return
 
@@ -200,8 +206,7 @@ class Dungeon:
         )
         room.is_boss_room = True
 
-        # Even after finding the exceptionally rare chamber, the boss itself
-        # has another very small chance to actually be present.
+        # The chamber can exist without the boss appearing.
         if random.random() >= self.boss_spawn_chance:
             return
 
@@ -236,7 +241,7 @@ class Dungeon:
             ]
         )
 
-        # Mark the boss so Game can give it the special key-drop rule.
+        # The game can use this flag for the special key-drop rule.
         boss.is_dungeon_boss = True
         room.add_monster(boss)
 
@@ -246,7 +251,7 @@ class Dungeon:
 
     def generate_items(self, room):
 
-        # 45% chance of an item
+        # 45% chance of an item.
         if random.random() > 0.45:
             return
 
@@ -254,33 +259,35 @@ class Dungeon:
             Item(
                 "Rusty Sword",
                 "An old sword. Better than fighting with your fists.",
-                10
+                10,
+                "weapon",
+                5
             ),
-
             Item(
                 "Leather Armor",
                 "Simple armor that offers basic protection.",
-                20
+                20,
+                "armor",
+                0,
+                5
             ),
-
             Item(
                 "Health Potion",
                 "Restores a little health.",
+                25,
+                "consumable",
                 25
             ),
-
             Item(
                 "Pile of Gold",
                 "A small pile of shiny gold coins.",
                 100
             ),
-
             Item(
                 "Ancient Coin",
                 "An old coin from a forgotten civilization.",
                 50
             ),
-
             Item(
                 "Silver Ring",
                 "A small silver ring. It may be worth something.",
@@ -288,7 +295,7 @@ class Dungeon:
             )
         ]
 
-        # Usually one item, occasionally two
+        # Usually one item, occasionally two.
         number_of_items = random.choices(
             [1, 2],
             weights=[85, 15]
@@ -312,12 +319,11 @@ class Dungeon:
         if room.name == "Dungeon Entrance":
             return
 
-        # 55% chance that NO enemy appears.
+        # 55% chance that no enemy appears.
         if random.random() < 0.55:
             return
 
         monster_types = [
-
             Monster(
                 "Goblin",
                 50,
@@ -507,13 +513,12 @@ class Dungeon:
 
         room.add_monster(monster)
 
-
     # -------------------------
     # NPC GENERATION
     # -------------------------
 
     def generate_npc(self, room):
-        # 10% chance of a neutral NPC appearing
+        # 10% chance of a neutral NPC appearing.
         if random.random() > 0.10:
             return
 
@@ -526,10 +531,6 @@ class Dungeon:
         npc = npc_class()
 
         room.add_npc(npc)
-
-
-
-
 
     # -------------------------
     # MOVEMENT
@@ -556,6 +557,7 @@ class Dungeon:
             return False
 
         # Generate the room if we have never visited it.
+        # If it already exists, generate_room() returns the same object.
         self.current_room = self.generate_room(x, y)
 
         self.current_x = x
