@@ -6,6 +6,7 @@ from game.player import Player
 from game.dungeon import Dungeon
 from game.save_system import SaveSystem
 from game.item import Item
+from game.assets import AssetManager
 
 
 WIDTH, HEIGHT = 1100, 700
@@ -17,26 +18,83 @@ class PygameGame:
 
     def __init__(self):
         pygame.init()
+        pygame.mixer.init()
+
         pygame.display.set_caption("Cryptfall")
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.screen = pygame.display.set_mode(
+            (WIDTH, HEIGHT)
+        )
         self.clock = pygame.time.Clock()
+
+        # -----------------------------------------------------
+        # FONTS
+        # -----------------------------------------------------
 
         self.font = pygame.font.Font(None, 25)
         self.small = pygame.font.Font(None, 20)
         self.large = pygame.font.Font(None, 38)
         self.title = pygame.font.Font(None, 58)
 
+        # -----------------------------------------------------
+        # ASSETS
+        # -----------------------------------------------------
+
+        self.assets = AssetManager()
+
+        self.assets.load_graphics()
+        self.assets.load_sounds()
+
+        # -----------------------------------------------------
+        # MUSIC
+        # -----------------------------------------------------
+
+        music_path = self.assets.sounds_path(
+            "music",
+            "dungeon_theme.ogg"
+        )
+
+        if pygame.mixer.music:
+
+            try:
+                pygame.mixer.music.load(
+                    music_path
+                )
+
+                pygame.mixer.music.set_volume(
+                    0.4
+                )
+
+                pygame.mixer.music.play(-1)
+
+            except pygame.error as exc:
+                print(
+                    f"[AUDIO] Could not load "
+                    f"dungeon music: {exc}"
+                )
+
+        # -----------------------------------------------------
+        # GAME STATE
+        # -----------------------------------------------------
+
         self.running = True
+
         self.state = "name"
+
         self.name = ""
+
         self.character = None
+
         self.player = None
+
         self.dungeon = None
+
         self.enemy = None
+
         self.messages = [
             "Welcome to Cryptfall.",
             "Create your character to begin."
         ]
+
         self.overlay = None
 
     # ---------- General UI ----------
@@ -292,44 +350,91 @@ class PygameGame:
     # ---------- Combat ----------
 
     def monster_attack(self):
+
         if not self.enemy or not self.player:
             return
+
+        # Try to play the monster-specific sound.
+        monster_sound_name = (
+            self.enemy.name.lower()
+            + "_attack"
+        )
+
+        monster_sound = self.assets.get_sound(
+            monster_sound_name
+        )
+
+        if monster_sound:
+
+            monster_sound.play()
+
+        else:
+
+            self.assets.play_sound(
+                "enemy_hit"
+            )
 
         raw_damage = self.enemy.attack()
 
-        # Player.take_damage() already applies race passive and equipment
-        # defense. Do not apply those reductions a second time here.
-        damage = self.player.take_damage(raw_damage)
+        damage = self.player.take_damage(
+            raw_damage
+        )
+
+        self.assets.play_sound(
+            "player_hurt"
+        )
 
         self.message(
-            f"{self.enemy.name} hits you for {damage} damage."
+            f"{self.enemy.name} "
+            f"hits you for {damage} damage."
         )
 
         if self.player.health <= 0:
+
             self.enemy = None
+
             self.state = "dead"
-            self.message("You have been defeated.")
+
+            self.message(
+                "You have been defeated."
+            )
 
     def player_attack(self):
+
         if not self.enemy or not self.player:
             return
 
+        # Play player attack sound.
+        self.assets.play_sound(
+            "player_attack"
+        )
+
         base = self.player.get_attack_damage()
+
         damage = random.randint(
             max(1, base - 5),
             base + 5
         )
 
-        # get_attack_damage() already includes the Brutal passive.
         self.enemy.take_damage(damage)
 
+        # Enemy hit sound.
+        self.assets.play_sound(
+            "enemy_hit"
+        )
+
         self.message(
-            f"You attack {self.enemy.name} for {damage} damage."
+            f"You attack "
+            f"{self.enemy.name} "
+            f"for {damage} damage."
         )
 
         if not self.enemy.is_alive():
+
             self.defeat_enemy()
+
         else:
+
             self.monster_attack()
 
     def use_ability(self):
@@ -351,13 +456,27 @@ class PygameGame:
             self.monster_attack()
 
     def dodge(self):
+
         if not self.enemy:
             return
 
         if random.random() < 0.50:
-            self.message(f"You dodge {self.enemy.name}'s attack!")
+
+            self.assets.play_sound(
+                "player_dodge"
+            )
+
+            self.message(
+                f"You dodge "
+                f"{self.enemy.name}'s attack!"
+            )
+
         else:
-            self.message("Your dodge fails!")
+
+            self.message(
+                "Your dodge fails!"
+            )
+
             self.monster_attack()
 
     def escape(self):
@@ -1005,6 +1124,7 @@ class PygameGame:
             self.draw_stats()
 
     def draw_combat(self):
+
         self.panel(
             (260, 120, 580, 350),
             (20, 20, 26),
@@ -1018,26 +1138,52 @@ class PygameGame:
             self.large
         )
 
+        # -----------------------------------------------------
+        # ENEMY IMAGE
+        # -----------------------------------------------------
+
+        enemy_image = self.assets.get_image(
+            self.enemy.name.lower()
+        )
+
+        if enemy_image:
+            image_rect = enemy_image.get_rect(
+                center=(735, 235)
+            )
+
+            self.screen.blit(
+                enemy_image,
+                image_rect
+            )
+
+        # -----------------------------------------------------
+        # ENEMY HP
+        # -----------------------------------------------------
+
         self.bar(
             300,
             200,
-            500,
+            300,
             28,
             self.enemy.health,
             self.enemy.max_health,
             "HP"
         )
 
+        # -----------------------------------------------------
+        # COMBAT OPTIONS
+        # -----------------------------------------------------
+
         self.draw_text(
             "1 Attack     2 Dodge     3 Escape",
             300,
-            260
+            270
         )
 
         self.draw_text(
             "4 Dialogue   5 Ability   6 Potion",
             300,
-            300
+            310
         )
 
         self.draw_text(
@@ -1046,6 +1192,8 @@ class PygameGame:
             365,
             self.small
         )
+
+
 
     def draw_inventory(self):
         self.panel(
