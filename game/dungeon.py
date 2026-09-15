@@ -31,8 +31,8 @@ class Dungeon:
         self.exit_x, self.exit_y = self._choose_exit_location()
 
         # Rare boss encounter.
-        self.special_room_chance = 0.25
-        self.boss_spawn_chance = 0.25
+        self.special_room_chance = 0.10
+        self.boss_spawn_chance = 0.10
         self.boss_key_drop_chance = 1.0
 
         # Create the starting room.

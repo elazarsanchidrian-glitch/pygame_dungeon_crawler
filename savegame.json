@@ -1,25 +1,565 @@
 {
+    "save_version": 2,
     "player": {
-        "name": "elazar",
+        "name": "lazaz",
         "gender": "Male",
-        "race": "Elf",
-        "character_class": "Rogue",
-        "passive": "Arcane Affinity",
-        "health": 126,
-        "max_health": 200,
+        "race": "Orc",
+        "character_class": "Warrior",
+        "passive": "Brutal",
+        "health": 223,
+        "max_health": 315,
         "stamina": 260,
-        "magicka": 195,
+        "max_stamina": 260,
+        "magicka": 170,
+        "max_magicka": 170,
         "gold": 0,
+        "level": 3,
+        "xp": 58,
+        "xp_to_next_level": 182,
+        "equipped_weapon": "Iron Sword",
+        "equipped_armor": "Chainmail",
+        "equipped_shield": "Wooden Shield",
         "inventory": [
+            {
+                "name": "Iron Sword",
+                "description": "A sturdy sword made for close combat.",
+                "value": 50,
+                "item_type": "weapon",
+                "power": 10,
+                "defense": 0
+            },
+            {
+                "name": "Wooden Shield",
+                "description": "A simple shield that offers basic protection.",
+                "value": 30,
+                "item_type": "shield",
+                "power": 0,
+                "defense": 10
+            },
+            {
+                "name": "Chainmail",
+                "description": "Basic metal armor offering decent protection.",
+                "value": 75,
+                "item_type": "armor",
+                "power": 0,
+                "defense": 15
+            },
             {
                 "name": "Health Potion",
                 "description": "Restores some health.",
-                "value": 25
+                "value": 25,
+                "item_type": "consumable",
+                "power": 40,
+                "defense": 0
+            },
+            {
+                "name": "Health Potion",
+                "description": "Restores some health.",
+                "value": 25,
+                "item_type": "consumable",
+                "power": 40,
+                "defense": 0
             }
         ]
     },
     "dungeon": {
-        "current_x": -1,
-        "current_y": 4
+        "current_x": -8,
+        "current_y": 10,
+        "exit_x": 4,
+        "exit_y": -7,
+        "exit_min_distance": 5,
+        "exit_max_distance": 12,
+        "special_room_chance": 0.1,
+        "boss_spawn_chance": 0.1,
+        "boss_key_drop_chance": 1.0,
+        "rooms": [
+            {
+                "x": 0,
+                "y": 0,
+                "name": "Dungeon Entrance",
+                "description": "The entrance to the dungeon. Cold air flows in from behind you.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": false,
+                "items": [],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": 0,
+                "y": -1,
+                "name": "Cavern",
+                "description": "A damp natural cavern surrounds you.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [
+                    {
+                        "name": "Pile of Gold",
+                        "description": "A small pile of shiny gold coins.",
+                        "value": 100,
+                        "item_type": "misc",
+                        "power": 0,
+                        "defense": 0
+                    },
+                    {
+                        "name": "Rusty Sword",
+                        "description": "An old sword recovered from the dead.",
+                        "value": 20,
+                        "item_type": "weapon",
+                        "power": 0,
+                        "defense": 0
+                    }
+                ],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": 0,
+                "y": -2,
+                "name": "Dark Hallway",
+                "description": "A long stone hallway disappears into the darkness.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [
+                    {
+                        "name": "Health Potion",
+                        "description": "Restores a little health.",
+                        "value": 25,
+                        "item_type": "consumable",
+                        "power": 25,
+                        "defense": 0
+                    }
+                ],
+                "monsters": [],
+                "npcs": [
+                    {
+                        "name": "Wandering Merchant",
+                        "class_name": "Merchant",
+                        "dialogue": null
+                    }
+                ]
+            },
+            {
+                "x": -1,
+                "y": -2,
+                "name": "Cavern",
+                "description": "A damp natural cavern surrounds you.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": -1,
+                "y": -1,
+                "name": "Ancient Prison",
+                "description": "Rusty cells line the walls of this forgotten prison.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [
+                    {
+                        "name": "Rusty Sword",
+                        "description": "An old sword. Better than fighting with your fists.",
+                        "value": 10,
+                        "item_type": "weapon",
+                        "power": 5,
+                        "defense": 0
+                    }
+                ],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": 1,
+                "y": -1,
+                "name": "Mysterious Chamber",
+                "description": "You cannot tell what this chamber was once used for.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [
+                    {
+                        "name": "Rusty Sword",
+                        "description": "An old sword. Better than fighting with your fists.",
+                        "value": 10,
+                        "item_type": "weapon",
+                        "power": 5,
+                        "defense": 0
+                    },
+                    {
+                        "name": "Bone Charm",
+                        "description": "A strange charm made from bone.",
+                        "value": 15,
+                        "item_type": "misc",
+                        "power": 0,
+                        "defense": 0
+                    }
+                ],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": 1,
+                "y": 0,
+                "name": "Cavern",
+                "description": "A damp natural cavern surrounds you.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [
+                    {
+                        "name": "Health Potion",
+                        "description": "Restores some health.",
+                        "value": 25,
+                        "item_type": "consumable",
+                        "power": 0,
+                        "defense": 0
+                    }
+                ],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": 1,
+                "y": 1,
+                "name": "Ancient Prison",
+                "description": "Rusty cells line the walls of this forgotten prison.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [
+                    {
+                        "name": "Health Potion",
+                        "description": "Restores some health.",
+                        "value": 25,
+                        "item_type": "consumable",
+                        "power": 0,
+                        "defense": 0
+                    }
+                ],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": 1,
+                "y": 2,
+                "name": "Dark Hallway",
+                "description": "A long stone hallway disappears into the darkness.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": 1,
+                "y": 3,
+                "name": "Underground Lake",
+                "description": "Dark water stretches into the shadows.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": 1,
+                "y": 4,
+                "name": "Torchlit Corridor",
+                "description": "Old torches burn weakly along the walls.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [
+                    {
+                        "name": "Leather Armor",
+                        "description": "Simple armor that offers basic protection.",
+                        "value": 20,
+                        "item_type": "armor",
+                        "power": 0,
+                        "defense": 5
+                    }
+                ],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": 1,
+                "y": 5,
+                "name": "Cavern",
+                "description": "A damp natural cavern surrounds you.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [
+                    {
+                        "name": "Health Potion",
+                        "description": "Restores some health.",
+                        "value": 25,
+                        "item_type": "consumable",
+                        "power": 0,
+                        "defense": 0
+                    }
+                ],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": 0,
+                "y": 5,
+                "name": "Dark Hallway",
+                "description": "A long stone hallway disappears into the darkness.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [
+                    {
+                        "name": "Silver Ring",
+                        "description": "A small silver ring. It may be worth something.",
+                        "value": 75,
+                        "item_type": "misc",
+                        "power": 0,
+                        "defense": 0
+                    },
+                    {
+                        "name": "Health Potion",
+                        "description": "Restores some health.",
+                        "value": 25,
+                        "item_type": "consumable",
+                        "power": 0,
+                        "defense": 0
+                    }
+                ],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": -1,
+                "y": 5,
+                "name": "Torchlit Corridor",
+                "description": "Old torches burn weakly along the walls.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [
+                    {
+                        "name": "Leather Armor",
+                        "description": "Simple armor that offers basic protection.",
+                        "value": 20,
+                        "item_type": "armor",
+                        "power": 0,
+                        "defense": 5
+                    }
+                ],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": -2,
+                "y": 5,
+                "name": "Torchlit Corridor",
+                "description": "Old torches burn weakly along the walls.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [],
+                "monsters": [],
+                "npcs": [
+                    {
+                        "name": "Wandering Merchant",
+                        "class_name": "Merchant",
+                        "dialogue": null
+                    }
+                ]
+            },
+            {
+                "x": -3,
+                "y": 5,
+                "name": "Torchlit Corridor",
+                "description": "Old torches burn weakly along the walls.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": -4,
+                "y": 5,
+                "name": "Bloodstained Chamber",
+                "description": "The floor is stained with old, dark blood.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": -5,
+                "y": 5,
+                "name": "Forbidden Boss Chamber",
+                "description": "The air is unnaturally still. Ancient symbols cover the walls, and a huge sealed chamber dominates the room.",
+                "is_exit": false,
+                "is_boss_room": true,
+                "visited": true,
+                "items": [],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": -6,
+                "y": 5,
+                "name": "Bloodstained Chamber",
+                "description": "The floor is stained with old, dark blood.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [],
+                "monsters": [],
+                "npcs": [
+                    {
+                        "name": "Lost Traveler",
+                        "class_name": "LostTraveler",
+                        "dialogue": null
+                    }
+                ]
+            },
+            {
+                "x": -7,
+                "y": 5,
+                "name": "Dark Hallway",
+                "description": "A long stone hallway disappears into the darkness.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": -7,
+                "y": 6,
+                "name": "Torchlit Corridor",
+                "description": "Old torches burn weakly along the walls.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": -7,
+                "y": 7,
+                "name": "Cavern",
+                "description": "A damp natural cavern surrounds you.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [
+                    {
+                        "name": "Health Potion",
+                        "description": "Restores a little health.",
+                        "value": 25,
+                        "item_type": "consumable",
+                        "power": 25,
+                        "defense": 0
+                    },
+                    {
+                        "name": "Rusty Dagger",
+                        "description": "A battered dagger.",
+                        "value": 15,
+                        "item_type": "weapon",
+                        "power": 0,
+                        "defense": 0
+                    }
+                ],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": -7,
+                "y": 8,
+                "name": "Mysterious Chamber",
+                "description": "You cannot tell what this chamber was once used for.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [
+                    {
+                        "name": "Pile of Gold",
+                        "description": "A small pile of shiny gold coins.",
+                        "value": 100,
+                        "item_type": "misc",
+                        "power": 0,
+                        "defense": 0
+                    }
+                ],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": -7,
+                "y": 9,
+                "name": "Abandoned Armory",
+                "description": "Broken weapons and rusty armor litter the floor.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": -7,
+                "y": 10,
+                "name": "Bloodstained Chamber",
+                "description": "The floor is stained with old, dark blood.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [
+                    {
+                        "name": "Health Potion",
+                        "description": "Restores a little health.",
+                        "value": 25,
+                        "item_type": "consumable",
+                        "power": 25,
+                        "defense": 0
+                    },
+                    {
+                        "name": "Health Potion",
+                        "description": "Restores some health.",
+                        "value": 25,
+                        "item_type": "consumable",
+                        "power": 0,
+                        "defense": 0
+                    }
+                ],
+                "monsters": [],
+                "npcs": []
+            },
+            {
+                "x": -8,
+                "y": 10,
+                "name": "Bloodstained Chamber",
+                "description": "The floor is stained with old, dark blood.",
+                "is_exit": false,
+                "is_boss_room": false,
+                "visited": true,
+                "items": [],
+                "monsters": [],
+                "npcs": []
+            }
+        ]
     }
 }
