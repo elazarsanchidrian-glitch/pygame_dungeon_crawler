@@ -38,6 +38,7 @@ class AssetManager:
             "spirit": "spirit.png",
             "vampire": "vampire.png",
             "dragon": "dragon.png",
+            "dungeon warden": "dungeon_warden.png",
         }
 
         for name, filename in monster_images.items():
