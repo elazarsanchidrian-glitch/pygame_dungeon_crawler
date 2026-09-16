@@ -4,7 +4,6 @@ import pygame
 
 class AssetManager:
 
-
     def play_sound(self, name):
         sound = self.sounds.get(name)
 
@@ -12,9 +11,9 @@ class AssetManager:
             return
 
         try:
-            pygame.mixer.Sound(sound).play()
+            sound.play()
         except pygame.error:
-            print(f"Could not play sound: {sound}")
+            print(f"Could not play sound: {name}")
 
 
 
@@ -112,14 +111,12 @@ class AssetManager:
                 print(f"Player image not found, skipping: {path}")
 
     def load_sounds(self):
-
         base = os.path.join(
             "assets",
             "sounds"
         )
 
         # ---------- Dungeon Music ----------
-
         music_path = os.path.join(
             base,
             "music",
@@ -130,5 +127,37 @@ class AssetManager:
             self.sounds["dungeon_theme"] = music_path
             print(f"Sound found: {music_path}")
         else:
-            print(f"Dungeon music not found, skipping: {music_path}")
+            print(
+                f"Dungeon music not found, skipping: "
+                f"{music_path}"
+            )
 
+        # ---------- Monster Sounds ----------
+        monsters = [
+            "bandit",
+            "demon",
+            "dragon",
+            "goblin",
+            "orc",
+            "skeleton",
+            "spirit",
+            "troll",
+            "vampire",
+        ]
+
+        for monster in monsters:
+            for sound_type in ("attack", "wound", "death"):
+                filename = f"{monster}_{sound_type}.wav"
+
+                path = os.path.join(
+                    base,
+                    "monsters",
+                    filename
+                )
+
+                if os.path.exists(path):
+                    key = f"{monster}_{sound_type}"
+                    self.sounds[key] = pygame.mixer.Sound(path)
+                    print(f"Sound loaded: {path}")
+                else:
+                    print(f"Sound not found, skipping: {path}")

@@ -400,9 +400,12 @@ class PygameGame:
             )
 
     def player_attack(self):
-
         if not self.enemy or not self.player:
             return
+
+        # Keep a local reference because defeat_enemy()
+        # eventually sets self.enemy = None.
+        enemy = self.enemy
 
         # Play player attack sound.
         self.assets.play_sound(
@@ -416,25 +419,29 @@ class PygameGame:
             base + 5
         )
 
-        self.enemy.take_damage(damage)
+        enemy.take_damage(damage)
 
-        # Enemy hit sound.
-        self.assets.play_sound(
-            "enemy_hit"
-        )
+        # Monster wound/death sound.
+        monster_name = enemy.name.lower()
+
+        if enemy.is_alive():
+            self.assets.play_sound(
+                f"{monster_name}_wound"
+            )
+        else:
+            self.assets.play_sound(
+                f"{monster_name}_death"
+            )
 
         self.message(
             f"You attack "
-            f"{self.enemy.name} "
+            f"{enemy.name} "
             f"for {damage} damage."
         )
 
-        if not self.enemy.is_alive():
-
+        if not enemy.is_alive():
             self.defeat_enemy()
-
         else:
-
             self.monster_attack()
 
     def use_ability(self):
@@ -443,12 +450,22 @@ class PygameGame:
 
         enemy = self.enemy
 
-        # Let Player own the class ability logic so the console and Pygame
-        # versions use the same resource costs and damage rules.
+        # Let Player own the class ability logic.
         success = self.player.use_ability(enemy)
 
         if not success:
             return
+
+        monster_name = enemy.name.lower()
+
+        if enemy.is_alive():
+            self.assets.play_sound(
+                f"{monster_name}_wound"
+            )
+        else:
+            self.assets.play_sound(
+                f"{monster_name}_death"
+            )
 
         if not enemy.is_alive():
             self.defeat_enemy()
