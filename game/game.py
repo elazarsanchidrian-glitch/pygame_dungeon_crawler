@@ -34,7 +34,6 @@ class Game:
         # -------------------------
         # CREATE PLAYER
         # -------------------------
-
         self.player = Player(player_name)
 
         self.player.gender = character.gender
@@ -42,20 +41,16 @@ class Game:
         self.player.character_class = character.character_class
         self.player.passive = character.passive
 
-        self.player.health = character.health
-        self.player.max_health = character.health
-
         self.player.stamina = character.stamina
         self.player.magicka = character.magicka
 
-        # -------------------------
-        # CLASS STARTING INVENTORY
-        # -------------------------
-
+        # Setup starting inventory & gear FIRST so max_health scales properly
         self.player.setup_starting_inventory()
         self.player.auto_equip_starting_gear()
 
-        self.player.health = character.health
+        # Set max_health based on base creation + equipped stats, then full heal
+        self.player.max_health = character.health + getattr(self.player.equipped_armor, "power", 0)
+        self.player.health = self.player.max_health
 
         # -------------------------
         # STARTING ROOM
@@ -197,17 +192,33 @@ class Game:
     # -------------------------
 
     def check_for_exit(self):
-        """Return True when the player reaches the normal dungeon exit."""
+        """Return True when the player reaches the normal dungeon exit with the key."""
         room = self.player.current_room
 
         if room.is_exit:
+            # Check if the player has the Ancient Dungeon Key
+            has_key = any(item.name == "Ancient Dungeon Key" for item in self.player.inventory)
+
+            if not has_key:
+                self.ui.show_message(
+                    "\nYou find the massive ancient doorway, but it is locked tight!"
+                )
+                self.ui.show_message(
+                    "You need to find the Ancient Dungeon Key hidden somewhere in the dungeon to open it."
+                )
+                return False
+
             self.ui.show_message(
-                "\nYou have discovered the dungeon exit!"
+                "\nYou insert the Ancient Dungeon Key into the massive doorway..."
+            )
+            self.ui.show_message(
+                "The heavy locks grind open, revealing the path to freedom!"
             )
             self.ui.show_victory()
             return True
 
         return False
+
 
     # -------------------------
     # MOVEMENT
@@ -428,10 +439,15 @@ class Game:
             self.ui.show_error("That person isn't here.")
             return
 
-        try:
+        # NPCs use different contexts:
+        # Lost Traveler needs the Game instance to read dungeon coordinates.
+        # Merchant needs the Player instance to handle gold and inventory.
+        if npc.__class__.__name__ == "LostTraveler":
+            npc.talk(self)
+        else:
             npc.talk(self.player)
-        except TypeError:
-            npc.talk()
+
+
 
     # -------------------------
     # ATTACK
@@ -511,6 +527,7 @@ class Game:
 
             self.player.gain_xp(max(10, monster.max_health // 3))
 
+
             # The dungeon boss has an exceptionally rare key drop.
             if getattr(monster, "is_dungeon_boss", False):
                 if random.random() < self.dungeon.boss_key_drop_chance:
@@ -519,17 +536,14 @@ class Game:
                     key = Item(
                         "Ancient Dungeon Key",
                         "A mysterious key dropped by the Dungeon Warden. "
-                        "Its purpose is unknown... for now.",
+                        "Its purpose is now clear: it unlocks the dungeon exit.",
                         500
                     )
                     room.add_item(key)
                     self.ui.show_message(
                         "\nRARE DROP! The Dungeon Warden dropped an Ancient Dungeon Key!"
                     )
-                else:
-                    self.ui.show_message(
-                        "The Dungeon Warden did not drop the Ancient Dungeon Key."
-                    )
+
 
             return True
 
@@ -571,8 +585,6 @@ class Game:
         self.player.race = player_data.get("race")
         self.player.character_class = player_data.get("character_class")
         self.player.passive = player_data.get("passive")
-        self.player.health = player_data.get("health", self.player.health)
-        self.player.max_health = player_data.get("max_health", self.player.max_health)
         self.player.stamina = player_data.get("stamina", self.player.stamina)
         self.player.magicka = player_data.get("magicka", self.player.magicka)
         self.player.gold = player_data.get("gold", self.player.gold)
@@ -594,7 +606,23 @@ class Game:
                 )
             )
 
-        # Restore dungeon seed data before rebuilding the current room.
+        # Re-equip items FIRST to establish passive bonus caps
+        self.player.equipped_weapon = None
+        self.player.equipped_armor = None
+        self.player.equipped_shield = None
+        for item in self.player.inventory:
+            if item.name == player_data.get("equipped_weapon"):
+                self.player.equipped_weapon = item
+            elif item.name == player_data.get("equipped_armor"):
+                self.player.equipped_armor = item
+            elif item.name == player_data.get("equipped_shield"):
+                self.player.equipped_shield = item
+
+        # Restore saved health LAST so gear bonuses don't overwrite current status
+        self.player.max_health = player_data.get("max_health", self.player.max_health)
+        self.player.health = player_data.get("health", self.player.max_health)
+
+        # Restore dungeon state
         if "exit_x" in dungeon_data and "exit_y" in dungeon_data:
             self.dungeon.exit_x = dungeon_data["exit_x"]
             self.dungeon.exit_y = dungeon_data["exit_y"]
@@ -606,17 +634,6 @@ class Game:
             starting_room=(self.dungeon.current_x == 0 and self.dungeon.current_y == 0)
         )
         self.player.current_room = self.dungeon.current_room
-
-        self.player.equipped_weapon = None
-        self.player.equipped_armor = None
-        self.player.equipped_shield = None
-        for item in self.player.inventory:
-            if item.name == player_data.get("equipped_weapon"):
-                self.player.equipped_weapon = item
-            elif item.name == player_data.get("equipped_armor"):
-                self.player.equipped_armor = item
-            elif item.name == player_data.get("equipped_shield"):
-                self.player.equipped_shield = item
 
         self.game_won = False
         self.ui.show_message(f"Game loaded. Welcome back, {self.player.name}!")
@@ -641,8 +658,8 @@ class Game:
         )
 
         self.ui.show_message(
-            "A legendary guardian and its key may exist somewhere in the darkness, "
-            "but finding them is extraordinarily unlikely."
+            "A Dungeon Warden may guard a rare boss chamber. "
+            "Defeat the Warden to obtain the key to the exit."
         )
 
         self.ui.show_message(
@@ -758,8 +775,9 @@ class Game:
                     "The exit is guaranteed to exist somewhere in the dungeon."
                 )
                 self.ui.show_message(
-                    "A legendary boss chamber may very rarely appear, and the boss "
-                    "has a very small chance to drop the Ancient Dungeon Key."
+                    "A rare boss chamber may appear. "
+                    "If the Dungeon Warden appears and you defeat it, "
+                    "it drops the Ancient Dungeon Key."
                 )
 
             # -------------------------

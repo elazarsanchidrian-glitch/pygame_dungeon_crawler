@@ -1,10 +1,11 @@
 import random
 
-from game.room import Room
-from game.item import Item
-from game.monster import Monster
-from game.lost_traveler import LostTraveler
-from game.merchant import Merchant
+# Change these absolute game.* imports:
+from .room import Room
+from .item import Item
+from .monster import Monster
+from .lost_traveler import LostTraveler
+from .merchant import Merchant
 
 
 class Dungeon:

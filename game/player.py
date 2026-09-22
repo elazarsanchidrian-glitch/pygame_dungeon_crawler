@@ -548,6 +548,20 @@ class Player:
         return True
 
     # -------------------------
+    # BASIC ATTACK
+    # -------------------------
+
+    def attack(self, monster):
+        """Perform a basic attack. Returns True when the attack is executed."""
+        if monster is None or not hasattr(monster, "take_damage"):
+            return False
+
+        damage = self.get_attack_damage()
+        monster.take_damage(damage)
+        print(f"{self.name} attacks {monster.name} for {damage} damage!")
+        return True
+
+    # -------------------------
     # TAKE DAMAGE
     # -------------------------
 

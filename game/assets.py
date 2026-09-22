@@ -4,18 +4,9 @@ import pygame
 
 class AssetManager:
 
-    def play_sound(self, name):
-        sound = self.sounds.get(name)
-
-        if sound is None:
-            return
-
-        try:
-            sound.play()
-        except pygame.error:
-            print(f"Could not play sound: {name}")
-
-
+    def __init__(self):
+        self.graphics = {}
+        self.sounds = {}
 
     def sounds_path(self, *parts):
         return os.path.join(
@@ -23,10 +14,6 @@ class AssetManager:
             "sounds",
             *parts
         )
-
-    def __init__(self):
-        self.graphics = {}
-        self.sounds = {}
 
     def load_image(self, path, size=None):
         print(f"Loading image: {path}")
@@ -40,22 +27,52 @@ class AssetManager:
     def get_image(self, name):
         return self.graphics.get(name)
 
-
-
     def get_sound(self, name):
         return self.sounds.get(name)
 
+    # ---------- Sound & Music Methods ----------
 
+    def play_sound(self, name):
+        """Plays short audio clips (Sound objects) using play_sound."""
+        sound = self.sounds.get(name)
+
+        if sound is None:
+            return
+
+        # If a string music path is passed here by accident, redirect it to music playback
+        if isinstance(sound, str):
+            self.play_music(name)
+            return
+
+        try:
+            sound.play()
+        except pygame.error:
+            print(f"Could not play sound: {name}")
+
+    def play_music(self, name):
+        """Loads and loops background music paths via pygame.mixer.music."""
+        path = self.sounds.get(name)
+
+        if path and isinstance(path, str) and os.path.exists(path):
+            try:
+                pygame.mixer.music.load(path)
+                pygame.mixer.music.play(-1)  # -1 loops infinitely
+            except pygame.error:
+                print(f"Could not play music track: {name}")
+
+    def stop_music(self):
+        """Stops background music playback."""
+        pygame.mixer.music.stop()
+
+    # ---------- Asset Loading ----------
 
     def load_graphics(self):
-
         base = os.path.join(
             "assets",
             "graphics"
         )
 
         # ---------- Monsters ----------
-
         monster_images = {
             "goblin": "goblin.png",
             "skeleton": "skeleton.png",
@@ -70,7 +87,6 @@ class AssetManager:
         }
 
         for name, filename in monster_images.items():
-
             path = os.path.join(
                 base,
                 "monsters",
@@ -83,8 +99,6 @@ class AssetManager:
             )
 
         # ---------- Player ----------
-        # Player artwork is optional until the PNGs are added.
-
         player_images = {
             "warrior": "warrior.png",
             "mage": "mage.png",
@@ -92,7 +106,6 @@ class AssetManager:
         }
 
         for name, filename in player_images.items():
-
             path = os.path.join(
                 base,
                 "player",
@@ -125,7 +138,7 @@ class AssetManager:
 
         if os.path.exists(music_path):
             self.sounds["dungeon_theme"] = music_path
-            print(f"Sound found: {music_path}")
+            print(f"Music path stored: {music_path}")
         else:
             print(
                 f"Dungeon music not found, skipping: "

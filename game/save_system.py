@@ -7,22 +7,33 @@ class SaveSystem:
     SAVE_FILE = "savegame.json"
 
     @staticmethod
+    def _sanitize_item(item):
+        """Extract item data and apply fallback logic for broken values."""
+        item_type = getattr(item, "item_type", "misc")
+        power = getattr(item, "power", 0)
+
+        # Fallback fix: If a consumable item has 0 power, patch it to 25.
+        if item_type == "consumable" and power <= 0:
+            power = 25
+
+        return {
+            "name": getattr(item, "name", "Unknown Item"),
+            "description": getattr(item, "description", ""),
+            "value": getattr(item, "value", 0),
+            "item_type": item_type,
+            "power": power,
+            "defense": getattr(item, "defense", 0)
+        }
+
+    @staticmethod
     def save(game):
 
         player = game.player
         dungeon = game.dungeon
 
-        inventory = []
-
-        for item in player.inventory:
-            inventory.append({
-                "name": getattr(item, "name", "Unknown Item"),
-                "description": getattr(item, "description", ""),
-                "value": getattr(item, "value", 0),
-                "item_type": getattr(item, "item_type", "misc"),
-                "power": getattr(item, "power", 0),
-                "defense": getattr(item, "defense", 0)
-            })
+        inventory = [
+            SaveSystem._sanitize_item(item) for item in player.inventory
+        ]
 
         equipped_weapon = (
             player.equipped_weapon.name
@@ -97,14 +108,7 @@ class SaveSystem:
             }
 
             for item in getattr(room, "items", []):
-                room_data["items"].append({
-                    "name": getattr(item, "name", "Unknown Item"),
-                    "description": getattr(item, "description", ""),
-                    "value": getattr(item, "value", 0),
-                    "item_type": getattr(item, "item_type", "misc"),
-                    "power": getattr(item, "power", 0),
-                    "defense": getattr(item, "defense", 0)
-                })
+                room_data["items"].append(SaveSystem._sanitize_item(item))
 
             for monster in getattr(room, "monsters", []):
                 room_data["monsters"].append({
@@ -217,8 +221,19 @@ class SaveSystem:
             if "inventory" not in player_data:
                 player_data["inventory"] = []
 
+            # Auto-repair inventory items missing healing power
+            for item in player_data["inventory"]:
+                if item.get("item_type") == "consumable" and item.get("power", 0) <= 0:
+                    item["power"] = 25
+
             if "rooms" not in dungeon_data:
                 dungeon_data["rooms"] = []
+
+            # Auto-repair room ground items missing healing power
+            for room in dungeon_data["rooms"]:
+                for item in room.get("items", []):
+                    if item.get("item_type") == "consumable" and item.get("power", 0) <= 0:
+                        item["power"] = 25
 
             player_data["health"] = min(
                 max(0, player_data.get("health", 100)),

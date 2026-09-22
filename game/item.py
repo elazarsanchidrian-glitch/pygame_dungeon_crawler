@@ -33,8 +33,8 @@ class Item:
             print(f"Damage reduction: {self.defense}%")
         elif self.item_type == "shield":
             print(f"Damage reduction: {self.defense}%")
-        elif self.item_type == "consumable" and self.power:
-            print(f"Effect: +{self.power}")
+        if self.item_type == "consumable" and self.power == 0:
+           self.power = 25  # Set default healing power
 
     def __str__(self):
         return self.name
