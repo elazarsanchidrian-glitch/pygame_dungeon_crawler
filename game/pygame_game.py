@@ -91,6 +91,7 @@ class PygameGame:
         self.enemy = None
 
         self.active_merchant = None
+        self.active_npc = None
 
         self.messages = [
             "Welcome to Cryptfall.",
@@ -625,17 +626,21 @@ class PygameGame:
             return
 
         npc = room.npcs[0]
-        self.message(f"{npc.name}: {npc.description}")
 
-        # If the NPC has a stock attribute, treat them as a Merchant and open the graphical shop overlay
+        self.active_npc = npc
+
+        self.message(
+            f"{npc.name}: {npc.description}"
+        )
+
+        # Merchant
         if hasattr(npc, "stock"):
             self.active_merchant = npc
             self.overlay = "shop"
+
+        # Other NPCs, such as the Lost Traveler
         else:
-            try:
-                npc.talk(self.player)
-            except TypeError:
-                npc.talk()
+            self.overlay = "npc"
 
     def handle_shop_event(self, event):
         if not self.active_merchant:
@@ -1147,6 +1152,8 @@ class PygameGame:
 
         elif self.overlay == "shop":
             self.draw_shop()
+        elif self.overlay == "npc":
+            self.draw_npc_dialogue()
 
     def draw_combat(self):
         self.panel(
@@ -1267,32 +1274,142 @@ class PygameGame:
 
     def draw_shop(self):
         self.panel(
-            (200, 100, 700, 500),
+            (150, 75, 800, 545),
             (18, 18, 24),
             (170, 170, 180)
         )
 
-        self.draw_text("WANDERING MERCHANT", 235, 130, self.title)
-        self.draw_text(f"Your Gold: {self.player.gold}", 235, 180, self.font)
-        self.draw_text("For sale:", 235, 220, self.font)
+        self.draw_text(
+            "WANDERING MERCHANT",
+            185,
+            105,
+            self.title
+        )
 
-        if not self.active_merchant or not self.active_merchant.stock:
-            self.draw_text(" - Nothing. The merchant is sold out.", 235, 260)
+        # Merchant image
+        merchant_image = self.assets.get_image(
+            "merchant"
+        )
+
+        if merchant_image:
+            image_rect = merchant_image.get_rect(
+                center=(800, 245)
+            )
+
+            self.screen.blit(
+                merchant_image,
+                image_rect
+            )
+
+        self.draw_text(
+            f"Your Gold: {self.player.gold}",
+            185,
+            180,
+            self.font
+        )
+
+        self.draw_text(
+            "For sale:",
+            185,
+            220,
+            self.font
+        )
+
+        if (
+                not self.active_merchant
+                or not self.active_merchant.stock
+        ):
+            self.draw_text(
+                "Nothing. The merchant is sold out.",
+                185,
+                260
+            )
+
         else:
             y = 260
-            for i, item in enumerate(self.active_merchant.stock[:6], 1):
+
+            for i, item in enumerate(
+                    self.active_merchant.stock[:6],
+                    1
+            ):
                 self.draw_text(
-                    f"{i}. {item.name} - {item.value} gold ({item.description})",
-                    235,
+                    f"{i}. {item.name} - "
+                    f"{item.value} gold",
+                    185,
                     y,
                     self.small
                 )
+
                 y += 35
 
         self.draw_text(
             "1-6: Buy item   ESC / 0: Leave shop",
-            235,
-            530,
+            185,
+            570,
+            self.small
+        )
+
+
+    def draw_npc_dialogue(self):
+        self.panel(
+            (150, 75, 800, 545),
+            (18, 18, 24),
+            (170, 170, 180)
+        )
+
+        if not self.active_npc:
+            return
+
+        self.draw_text(
+            self.active_npc.name,
+            185,
+            110,
+            self.title
+        )
+
+        # NPC image
+        npc_image = None
+
+        if self.active_npc.name.lower() == "lost traveler":
+            npc_image = self.assets.get_image(
+                "lost_traveler"
+            )
+
+        if npc_image:
+            image_rect = npc_image.get_rect(
+                center=(760, 280)
+            )
+
+            self.screen.blit(
+                npc_image,
+                image_rect
+            )
+
+        # NPC description
+        description = getattr(
+            self.active_npc,
+            "description",
+            "The traveler remains silent."
+        )
+
+        self.draw_text(
+            description,
+            185,
+            210,
+            self.small
+        )
+
+        self.draw_text(
+            "The traveler speaks with you.",
+            185,
+            300,
+            self.font
+        )
+
+        self.draw_text(
+            "ESC / T: Close dialogue",
+            185,
+            570,
             self.small
         )
 
@@ -1330,6 +1447,15 @@ class PygameGame:
 
         if self.overlay == "shop":
             self.handle_shop_event(event)
+            return
+        if self.overlay == "npc":
+            if event.key in (
+                pygame.K_ESCAPE,
+                pygame.K_t
+            ):
+                self.overlay = None
+                self.active_npc = None
+
             return
 
         if self.overlay in ("inventory", "stats"):
