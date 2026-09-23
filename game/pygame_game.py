@@ -1289,10 +1289,149 @@ class PygameGame:
         )
 
     def draw_stats(self):
-        self.panel(
-            (250, 95, 600, 500),
-            (18, 18, 24),
-            (170, 170, 180)
-        )
+        self.panel((250, 95, 600, 500), (18, 18, 24), (170, 170, 180))
         self.draw_text("CHARACTER STATS", 285, 125, self.title)
-        # Stats rendering details...
+
+        stats = [
+            f"Name: {self.player.name}",
+            f"Race: {self.player.race}",
+            f"Gender: {self.player.gender}",
+            f"Class: {self.player.character_class}",
+            f"Passive: {self.player.passive}",
+            f"Level: {self.player.level}",
+            f"Health: {self.player.health}/{self.player.max_health}",
+            f"Stamina: {self.player.stamina}/{self.player.max_stamina}",
+            f"Magicka: {self.player.magicka}/{self.player.max_magicka}",
+            f"Attack: {self.player.get_attack_damage()}",
+            f"Defense: {self.player.get_damage_reduction()}%",
+            f"Gold: {self.player.gold}",
+        ]
+
+        y = 190
+        for line in stats:
+            self.draw_text(line, 300, y)
+            y += 27
+
+        self.draw_text("ESC / C: close", 300, 545, self.small)
+
+    # ---------- Input handling ----------
+
+    def handle_play_event(self, event):
+        if event.type != pygame.KEYDOWN:
+            return
+
+        if self.overlay == "shop":
+            self.handle_shop_event(event)
+            return
+
+        if self.overlay in ("inventory", "stats"):
+            if event.key in (pygame.K_ESCAPE, pygame.K_i, pygame.K_c):
+                self.overlay = None
+                return
+
+            if self.overlay == "inventory" and pygame.K_1 <= event.key <= pygame.K_9:
+                index = event.key - pygame.K_1
+                if index < len(self.player.inventory):
+                    item = self.player.inventory[index]
+                    if getattr(item, "item_type", "") == "consumable":
+                        self.player.use_item(item.name)
+                        self.message(f"Used {item.name}.")
+                    elif getattr(item, "item_type", "") in ("weapon", "armor", "shield"):
+                        if self.player.equip_item(item.name):
+                            self.message(f"Equipped {item.name}.")
+                    else:
+                        self.message(f"{item.name} cannot be equipped or used.")
+                else:
+                    self.message("There is no item in that slot.")
+            return
+
+        if self.enemy:
+            combat_keys = {
+                pygame.K_1: self.player_attack,
+                pygame.K_2: self.dodge,
+                pygame.K_3: self.escape,
+                pygame.K_4: self.dialogue,
+                pygame.K_5: self.use_ability,
+                pygame.K_6: lambda: self.use_item(0),
+            }
+            action = combat_keys.get(event.key)
+            if action:
+                action()
+            return
+
+        movement = {
+            pygame.K_w: "north",
+            pygame.K_UP: "north",
+            pygame.K_s: "south",
+            pygame.K_DOWN: "south",
+            pygame.K_a: "west",
+            pygame.K_LEFT: "west",
+            pygame.K_d: "east",
+            pygame.K_RIGHT: "east",
+        }
+
+        if event.key in movement:
+            self.move(movement[event.key])
+        elif event.key == pygame.K_e:
+            self.take_item()
+        elif event.key == pygame.K_t:
+            self.talk()
+        elif event.key == pygame.K_i:
+            self.overlay = "inventory"
+        elif event.key == pygame.K_c:
+            self.overlay = "stats"
+        elif event.key == pygame.K_F5:
+            self.save()
+        elif event.key == pygame.K_F9:
+            self.load()
+
+    def handle_event(self, event):
+        if event.type == pygame.QUIT:
+            self.running = False
+            return
+
+        if self.state in ("name", "gender", "race", "class"):
+            if event.type == pygame.KEYDOWN:
+                self.handle_creation(event)
+            return
+
+        if self.state == "play":
+            self.handle_play_event(event)
+            return
+
+        if self.state in ("dead", "won"):
+            if event.type == pygame.KEYDOWN:
+                if event.key in (pygame.K_RETURN, pygame.K_ESCAPE):
+                    self.running = False
+
+    # ---------- Drawing state screens ----------
+
+    def draw_end_screen(self):
+        self.screen.fill((10, 10, 14))
+        heading = "YOU ESCAPED!" if self.state == "won" else "YOU DIED"
+        self.draw_text(heading, 350, 180, self.title)
+
+        y = 290
+        for message in self.messages[-5:]:
+            self.draw_text(message, 180, y, self.font)
+            y += 30
+        self.draw_text("Press ENTER or ESC to exit.", 350, 560, self.small)
+
+    def draw(self):
+        if self.state in ("name", "gender", "race", "class"):
+            self.draw_creation()
+        elif self.state == "play":
+            self.draw_play()
+        elif self.state in ("dead", "won"):
+            self.draw_end_screen()
+
+    def run(self):
+        while self.running:
+            for event in pygame.event.get():
+                self.handle_event(event)
+
+            self.draw()
+            pygame.display.flip()
+            self.clock.tick(FPS)
+
+        pygame.quit()
