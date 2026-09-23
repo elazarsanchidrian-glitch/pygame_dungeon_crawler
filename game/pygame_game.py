@@ -978,6 +978,14 @@ class PygameGame:
                         (sx + 20, sy + 20),
                         7
                     )
+                
+                if r.npcs:
+                    pygame.draw.circle(
+                        self.screen,
+                        (80, 190, 120),
+                        (sx + 20, sy + 20),
+                        6
+                    )
 
                 if getattr(r, "is_boss_room", False):
                     pygame.draw.rect(
