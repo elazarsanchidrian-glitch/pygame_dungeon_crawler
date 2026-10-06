@@ -6,7 +6,11 @@ class AssetManager:
 
     def __init__(self):
         self.graphics = {}
+        self.races = {}
         self.sounds = {}
+
+    def get_race(self, name):
+        return self.races.get(name.lower())
 
     def sounds_path(self, *parts):
         return os.path.join(
@@ -161,6 +165,38 @@ class AssetManager:
                 print(
                     f"Player image not found, "
                     f"skipping: {path}"
+                )
+
+        # ---------- Races ----------
+
+        race_images = {
+            "human": "human.png",
+            "elf": "elf.png",
+            "dwarf": "dwarf.png",
+            "orc": "orc.png",
+            "halfling": "halfling.png",
+        }
+
+        for name, filename in race_images.items():
+            path = os.path.join(
+                base,
+                "races",
+                filename
+            )
+
+            if os.path.exists(path):
+                try:
+                    self.races[name] = self.load_image(
+                        path,
+                        (160, 160)
+                    )
+                except pygame.error:
+                    print(
+                        f"Invalid race image, skipping: {path}"
+                    )
+            else:
+                print(
+                    f"Race image not found, skipping: {path}"
                 )
 
         # ---------- NPCs ----------

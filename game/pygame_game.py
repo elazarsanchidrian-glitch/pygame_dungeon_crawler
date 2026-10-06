@@ -845,7 +845,7 @@ class PygameGame:
             self.large
         )
 
-        self.panel((80, 190, 940, 350))
+        self.panel((80, 190, 940, 420))
 
         if self.state == "name":
             self.draw_text(
@@ -894,41 +894,92 @@ class PygameGame:
                 380
             )
 
+
         elif self.state == "race":
+
             self.draw_text(
-                "Choose your race",
+
+                f"Name: {self.character.name}",
+
                 120,
-                220,
-                self.large
+
+                180
+
             )
 
-            for i, race in enumerate(
-                ("Human", "Elf", "Dwarf", "Orc", "Halfling"),
-                1
-            ):
-                self.draw_text(
-                    f"{i}  {race}",
-                    150,
-                    270 + i * 42
-                )
+            self.draw_text(
 
-        else:
+                "Choose your race",
+
+                120,
+
+                220,
+
+                self.large
+
+            )
+
+            races = [
+
+                ("1", "Human", "human"),
+
+                ("2", "Elf", "elf"),
+
+                ("3", "Dwarf", "dwarf"),
+
+                ("4", "Orc", "orc"),
+
+                ("5", "Halfling", "halfling")
+
+            ]
+
+            # Display race option text and corresponding portraits side-by-side
+
+            for i, (num, race_name, asset_key) in enumerate(races):
+
+                x_offset = 120 + (i * 175)  # Spacing out 5 items horizontally
+
+                # Draw text label
+
+                self.draw_text(f"{num}  {race_name}", x_offset, 270, self.font)
+
+                # Fetch and draw race PNG from AssetManager
+
+                race_image = self.assets.get_race(asset_key)
+
+                if race_image:
+                    image_rect = race_image.get_rect(topleft=(x_offset, 310))
+
+                    self.screen.blit(race_image, image_rect)
+
+        else:  # self.state == "class"
             self.draw_text(
                 "Choose your class",
                 120,
-                220,
+                210,
                 self.large
             )
 
-            for i, cls in enumerate(
-                ("Warrior", "Mage", "Rogue"),
-                1
-            ):
-                self.draw_text(
-                    f"{i}  {cls}",
-                    150,
-                    280 + i * 50
-                )
+            classes = [
+                ("1", "Warrior", "warrior"),
+                ("2", "Mage", "mage"),
+                ("3", "Rogue", "rogue")
+            ]
+
+            # Display class options text and their corresponding portraits side-by-side
+            for i, (num, cls_name, asset_key) in enumerate(classes):
+                x_offset = 120 + (i * 270)
+
+                # Draw text selection label
+                self.draw_text(f"{num}  {cls_name}", x_offset, 270, self.font)
+
+                # Fetch and draw player class PNG from AssetManager
+                class_image = self.assets.get_image(asset_key)
+                if class_image:
+                    # Optional: scale down slightly or draw directly (AssetManager pre-scales player to 160x160)
+                    image_rect = class_image.get_rect(topleft=(x_offset, 310))
+                    self.screen.blit(class_image, image_rect)
+
 
     def draw_play(self):
         self.screen.fill((13, 14, 18))
